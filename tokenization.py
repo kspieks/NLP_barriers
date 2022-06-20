@@ -47,7 +47,7 @@ class SmilesTokenizer(BertTokenizer):
             do_lower_case=do_lower_case,
             **kwargs,
         )
-        
+
         # define tokenization utilities
         self.tokenizer = RegexTokenizer()
 
@@ -77,15 +77,21 @@ class SmilesTokenizer(BertTokenizer):
 class RegexTokenizer:
     """Run regex tokenization"""
 
-    def __init__(self, regex_pattern: str=SMI_REGEX_PATTERN) -> None:
+    def __init__(self,
+                 regex_pattern: str=SMI_REGEX_PATTERN,
+                 unk_token: str = "[UNK]",
+                 ) -> None:
         """
         Constructs a RegexTokenizer.
         
         Args:
             regex_pattern: regex pattern used for tokenization.
+            unk_token: unknown token. Defaults to "[UNK]" for BERT.
         """
         self.regex_pattern = regex_pattern
         self.regex = re.compile(self.regex_pattern)
+
+        self.unk_token = unk_token
 
     def tokenize(self, text: str) -> List[str]:
         """
@@ -97,6 +103,21 @@ class RegexTokenizer:
         Returns:
             extracted tokens separated by spaces.
         """
-        tokens = [token for token in self.regex.findall(text)]
+        result = [(token.group(), token.span()) for token in self.regex.finditer(text)]
+        
+        i = 0
+        tokens = []
+        for match, span in result:
+            if i == span[0]:
+                tokens.append(match)
+            else:
+                tokens.append(self.unk_token)
+                tokens.append(match)
+            i = span[1]
+        
+        # account for unknown tokens at the end
+        if i < len(text):
+            tokens.append(self.unk_token)
+
         return tokens
 
