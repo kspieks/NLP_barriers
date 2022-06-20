@@ -13,6 +13,9 @@ def canonicalize_smi(smi, remove_Hs=False, sanitize=True, remove_atom_mapping=Fa
 
     mol = Chem.MolFromSmiles(smi, params)
 
+    if not remove_Hs:
+        mol = Chem.AddHs(mol)
+
     # Remove atom map numbers, otherwise the smiles string is long and non-readable
     if remove_atom_mapping:
         for atom in mol.GetAtoms():
