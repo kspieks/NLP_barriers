@@ -26,7 +26,7 @@ class RxnDatasetMLM(Dataset):
         return self.rxn_smiles[index]
 
 
-def construct_mlm_loader(file_path, tokenizer, args, modes=('train', 'val')):
+def construct_mlm_loader(tokenizer, args, modes=('train', 'val')):
     """Create PyTorch DataLoader"""
 
     if isinstance(modes, str):
@@ -34,12 +34,14 @@ def construct_mlm_loader(file_path, tokenizer, args, modes=('train', 'val')):
 
     loaders = []
     for mode in modes:
-        dataset = RxnDatasetMLM(file_path, tokenizer)
+        dataset = RxnDatasetMLM(args.mlm_train_path if mode == 'train' else args.mlm_eval_path,
+                                tokenizer,
+                                )
         loader = DataLoader(dataset=dataset,
-                            batch_size=args.batch_size,
+                            batch_size=args.per_device_train_batch_size if mode == 'train' else args.per_device_eval_batch_size,
                             shuffle=True if mode == 'train' else False,
-                            num_workers=args.num_workers,
-                            pin_memory=True,
+                            num_workers=args.dataloader_num_workers,
+                            pin_memory=args.dataloader_pin_memory,
                             )
         loaders.append(loader)
 
