@@ -42,3 +42,15 @@ def process_reaction(rxn):
 
     return f"{reactants_c}>{reagents_c}>{products_c}"
 
+
+def param_count(model: nn.Module) -> int:
+    """
+    Determines number of trainable parameters.
+    
+    Args:
+        model: An nn.Module.
+    
+    Returns:
+        The number of trainable parameters.
+    """
+    return sum(param.numel() for param in model.parameters() if param.requires_grad)
