@@ -73,6 +73,10 @@ def parse_command_line_arguments(command_line_args=None):
     training_args.add_argument('--seed', type=int, default=42,
                                help='Random seed that will be set at the beginning of training.')
 
+    training_args.add_argument('--report_to', type=str, default=None,
+                               choices=['azure_ml', 'comet_ml', 'mlflow', 'tensorboard', 'wandb'],
+                               help='Where to report the results and logs to.')
+
     training_args.add_argument('--dataloader_num_workers', type=int, default=0,
                                help='Number of workers for the parallel data loading (0 means sequential).')
 
