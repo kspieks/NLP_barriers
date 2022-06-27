@@ -5,8 +5,8 @@ export PYTHONPATH=$NLP_BARRIERS:$PYTHONPATH
 
 # general args
 vocab_file=$NLP_BARRIERS/data/mlm_USPTO/original/vocab.txt
-mlm_train_path=$NLP_BARRIERS/data/mlm_USPTO/with_Hs/mlm_train_file_Hs.txt
-mlm_eval_path=$NLP_BARRIERS/data/mlm_USPTO/with_Hs/mlm_eval_file_Hs.txt
+train_data=$NLP_BARRIERS/data/mlm_USPTO/with_Hs/mlm_train_file_Hs.txt
+val_data=$NLP_BARRIERS/data/mlm_USPTO/with_Hs/mlm_eval_file_Hs.txt
 
 # BertConfig arguments
 hidden_size=512
@@ -40,10 +40,10 @@ python -c "import torch;print(torch.cuda.device_count());print(torch.cuda.is_ava
 
 # -u: Force stdin, stdout and stderr to be totally unbuffered
 # On systems where it matters, also put stdin, stdout and stderr in binary mode
-python -u $NLP_BARRIERS/mlm_training.py \
+python -u $NLP_BARRIERS/scripts/mlm_training/mlm_training.py \
 --vocab_file $vocab_file \
---mlm_train_path $mlm_train_path \
---mlm_eval_path $mlm_eval_path \
+--train_data $train_data \
+--val_data $val_data \
 --hidden_size $hidden_size \
 --num_hidden_layers $num_hidden_layers \
 --num_attention_heads $num_attention_heads \
