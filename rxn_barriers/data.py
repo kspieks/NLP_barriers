@@ -2,6 +2,38 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 
+class TorchStandardScaler(torch.nn.Module):
+    """
+    Standard Scaler Class to z-score data
+    
+    Args:
+        eps: tolerance to avoid dividing by 0.
+    """
+    def __init__(self, eps=1e-7):
+        super().__init__()
+        self.eps = eps
+
+    def fit(self, x):
+        mean = x.mean(dim=0, keepdim=True)
+        std = x.std(dim=0, unbiased=False, keepdim=True)
+        self.register_buffer('mean', mean)
+        self.register_buffer('std', std)
+
+    def transform(self, x):
+        x = x - self.mean
+        x = x / (self.std + self.eps)
+        return x
+
+    def fit_transform(self, x):
+        self.fit(x)
+        return self.transform(x)
+
+    def inverse_transform(self, x):
+        x = x * (self.std + self.eps)
+        x = x + self.mean
+        return x
+
+
 class RxnDatasetMLM(Dataset):
     def __init__(self,
                  file_path,
