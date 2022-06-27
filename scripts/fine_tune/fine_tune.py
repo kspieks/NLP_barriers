@@ -13,6 +13,7 @@ import wandb
 from rxn_barriers.data import RxnDatasetRegression
 from rxn_barriers.tokenization import SmilesTokenizer
 from rxn_barriers.utils.parsing import parse_command_line_arguments
+from rxn_barriers.utils.nn_utils import compute_metrics
 
 
 args, huggingface_args = parse_command_line_arguments()
@@ -59,6 +60,7 @@ trainer = Trainer(model=model,
                   train_dataset=train_dataset,
                   eval_dataset=val_dataset,
                   tokenizer=smi_tokenizer,
-    )
+                  compute_metrics=compute_metrics,
+                  )
 
 trainer.train()
