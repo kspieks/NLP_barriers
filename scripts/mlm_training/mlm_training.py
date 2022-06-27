@@ -40,14 +40,17 @@ model = BertForMaskedLM(config=config)
 print(f'Num parameters: {model.num_parameters():,}')
 print(f'Model architecture is:\n{model}')
 
-train_dataset = RxnDatasetMLM(file_path=args.mlm_train_path, tokenizer=smi_tokenizer)
-test_dataset = RxnDatasetMLM(file_path=args.mlm_eval_path, tokenizer=smi_tokenizer)
+train_dataset = RxnDatasetMLM(file_path=args.train_data, tokenizer=smi_tokenizer)
+test_dataset = RxnDatasetMLM(file_path=args.val_data, tokenizer=smi_tokenizer)
 
 data_collator = DataCollatorForLanguageModeling(
-    tokenizer=smi_tokenizer, mlm=True, mlm_probability=0.15
+    tokenizer=smi_tokenizer, mlm=True, mlm_probability=0.15,
 )
 
-wandb.init(project="USPTO_MLM_supercloud", entity="kspieker", mode='offline')
+wandb.init(project="USPTO_MLM_supercloud",
+           entity="kspieker",
+           mode='offline',
+           )
 
 training_args_dict = huggingface_args['TrainingArgs']
 training_args = TrainingArguments(**training_args_dict)
