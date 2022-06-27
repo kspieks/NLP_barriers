@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torch.nn import MSELoss
 from transformers import Trainer
 
 
@@ -34,5 +35,6 @@ class CustomTrainer(Trainer):
         if self.scaler:
             logits = self.scaler.inverse_transform(logits)
 
+        loss_func = MSELoss()
         loss = loss_func(logits, labels)
         return (loss, outputs) if return_outputs else loss
