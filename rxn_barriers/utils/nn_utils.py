@@ -27,24 +27,42 @@ def compute_metrics(eval_pred):
 
 
 class CustomTrainer(Trainer):
-    """Create custom loss function to scale or weight the targets"""
+    """
+    Create custom Trainer class
+    """
     def __init__(self, scaler=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.scaler = scaler
 
-    def compute_loss(self, model, inputs, return_outputs=False):
-        # feed inputs to model and extract logits
-        outputs = model(**inputs)
-        logits = outputs.get("logits")
-        
-        # extract target Labels
-        labels = inputs.get("labels")
-
-        # define custom loss function with class weights
-        if self.scaler:
-            logits = self.scaler.inverse_transform(logits)
-
+    def compute_metrics(self, eval_pred):
+        """
+        Must take an [`EvalPrediction`] and return
+        a dictionary string to metric values.
+        """
+        predictions, labels = eval_pred
         loss_func = MSELoss()
-        loss = loss_func(logits, labels)
-        return (loss, outputs) if return_outputs else loss
+        scaled_loss = loss_func(logits, labels)
+
+        scaled_mae = mean_absolute_error(labels, predictions)
+        scaled_rmse = mean_squared_error(labels, predictions, squared=False)
+        scaled_R2 = r2_score(labels, predictions)
+
+        labels_unscaled = self.scaler.inverse_transform(labels)
+        preds_unscaled = self.scaler.inverse_transform(predictions)
+        
+        mae = mean_absolute_error(labels_unscaled, preds_unscaled)
+        rmse = mean_squared_error(labels_unscaled, preds_unscaled, squared=False)
+        R2 = r2_score(labels_unscaled, preds_unscaled)
+
+        output_dict = {
+            'scaled_MSE_loss': scaled_loss,
+            'scaled_mae': scaled_mae,
+            'scaled_rmse': scaled_rmse,
+            'scaled_R2': scaled_R2,
+            'MAE': mae,
+            'RMSE': rmse,
+            'R2': R2,
+        }
+        return output_dict
+
