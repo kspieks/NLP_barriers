@@ -49,7 +49,7 @@ class RxnDatasetMLM(Dataset):
         
         self.encodings = [self.preprocess(line) for line in lines]
     
-    def preprocess(self, line):
+    def preprocess(self, smi):
         """
         Proprocess and tokenize the reaction smiles
 
@@ -59,7 +59,7 @@ class RxnDatasetMLM(Dataset):
         Returns:
             tokenized_smi: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
         """
-        return self.tokenizer(line.strip(), truncation=True, padding='max_length')
+        return self.tokenizer(smi.strip(), truncation=True, padding='max_length')
     
     def __len__(self):
         return len(self.encodings)
