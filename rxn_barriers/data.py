@@ -45,17 +45,25 @@ class RxnDatasetMLM(Dataset):
         with open(file_path, 'r') as f:
             lines = f.readlines()
         
-        self.rxn_smiles = [self.preprocess(line) for line in lines]
+        self.encodings = [self.preprocess(line) for line in lines]
     
     def preprocess(self, line):
-        """Proprocess and tokenize the reaction smiles"""
+        """
+        Proprocess and tokenize the reaction smiles
+
+        Args:
+            smi: string representing the reaction SMILES
+
+        Returns:
+            tokenized_smi: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
+        """
         return self.tokenizer(line.strip(), truncation=True, padding='max_length')
     
     def __len__(self):
-        return len(self.rxn_smiles)
+        return len(self.encodings)
 
-    def __getitem__(self, index):
-        return self.rxn_smiles[index]
+    def __getitem__(self, idx):
+        return self.encodings[idx]
 
 
 def construct_mlm_loader(tokenizer, args, modes=('train', 'val')):
