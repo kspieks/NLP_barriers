@@ -17,11 +17,20 @@ def parse_command_line_arguments(command_line_args=None):
     parser.add_argument('--vocab_file', type=str,
                         help="Path to the text file containing tokenizer's vocab.")
 
-    parser.add_argument('--mlm_train_path', type=str,
-                        help='Path to the text file containing reaction SMILES.')
+    parser.add_argument('--train_data', type=str,
+                        help='Path to training data.')
 
-    parser.add_argument('--mlm_eval_path', type=str,
-                        help='Path to the text file containing reaction SMILES.')
+    parser.add_argument('--val_data', type=str,
+                        help='Path to the validation data.')
+
+    parser.add_argument('--test_data', type=str,
+                        help='Path to the testing data.')
+
+    parser.add_argument('--final_mlm_checkpoint', type=str,
+                        help='Path to the best MLM checkpoint.')
+
+    parser.add_argument('--targets', nargs='+',
+                        help='Name of columns to use as regression targets.')
 
     # BertConfig arguments
     # https://huggingface.co/docs/transformers/model_doc/bert#transformers.BertConfig
