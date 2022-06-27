@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
 
@@ -89,3 +91,45 @@ def construct_mlm_loader(tokenizer, args, modes=('train', 'val')):
         return loaders[0]
     else:
         return loaders
+
+class RxnDatasetRegression(Dataset):
+    def __init__(self,
+                 data_path,
+                 tokenizer,
+                 targets,
+                 ):
+        self.data_path = data_path
+        self.tokenizer = tokenizer
+        self.targets = targets
+        
+        self.df = pd.read_csv(self.data_path)
+        self.encodings = [self.preprocess(smi) for smi in self.df.rxn_smiles]
+
+        self.labels = self.get_targets()
+        self.mean = np.mean(self.labels, axis=0)
+        self.std = np.std(self.labels, axis=0)        
+
+    def get_targets(self):
+        """Create list of targets for regression"""
+        return self.df[self.targets].values
+
+    def preprocess(self, smi):
+        """
+        Proprocess and tokenize the reaction smiles
+
+        Args:
+            smi: string representing the reaction SMILES
+
+        Returns:
+            tokenized_smi: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
+        """
+        return self.tokenizer(smi.strip(), truncation=True, padding='max_length')
+    
+    def __len__(self):
+        return len(self.encodings)
+
+    def __getitem__(self, idx):
+        # convert values from list to tensor
+        item = {key: torch.tensor(val) for key, val in self.encodings[idx].items()}
+        item['labels'] = torch.tensor(self.labels[idx])
+        return item
