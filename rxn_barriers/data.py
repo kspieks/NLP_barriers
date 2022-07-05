@@ -106,12 +106,18 @@ class RxnDatasetRegression(Dataset):
         self.encodings = [self.preprocess(smi) for smi in self.df.rxn_smiles]
 
         self.labels = self.get_targets()
-        self.mean = np.mean(self.labels, axis=0)
-        self.std = np.std(self.labels, axis=0)        
+        
+    @property
+    def mean(self):
+        return np.mean(self.labels, axis=0)
+
+    @property
+    def std(self):
+        return np.std(self.labels, axis=0)
 
     def get_targets(self):
         """Create list of targets for regression"""
-        return self.df[self.targets].values
+        return torch.tensor(self.df[self.targets].values)
 
     def preprocess(self, smi):
         """
@@ -131,5 +137,5 @@ class RxnDatasetRegression(Dataset):
     def __getitem__(self, idx):
         # convert values from list to tensor
         item = {key: torch.tensor(val) for key, val in self.encodings[idx].items()}
-        item['labels'] = torch.tensor(self.labels[idx])
+        item['labels'] = self.labels[idx]
         return item
