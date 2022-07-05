@@ -17,6 +17,10 @@ def parse_command_line_arguments(command_line_args=None):
     parser.add_argument('--vocab_file', type=str,
                         help="Path to the text file containing tokenizer's vocab.")
 
+    parser.add_argument('--model_type', type=str, default='bert',
+                        choices=['bert', 'albert'],
+                        help="Model architecture.")
+
     parser.add_argument('--train_data', type=str,
                         help='Path to training data.')
 
@@ -32,44 +36,12 @@ def parse_command_line_arguments(command_line_args=None):
     parser.add_argument('--targets', nargs='+',
                         help='Name of columns to use as regression targets.')
 
-    # BertConfig arguments
+    # Config arguments
     # https://huggingface.co/docs/transformers/model_doc/bert#transformers.BertConfig
     # https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/configuration_bert.py#L72
-    bert_config = parser.add_argument_group('BertConfig')
-
-    bert_config.add_argument('--hidden_size', type=int, default=768,
-                             help=' Dimensionality of the encoder layers and the pooler layer.')
-
-    bert_config.add_argument('--num_hidden_layers', type=int, default=12,
-                             help='Number of hidden layers in the Transformer encoder.')
-
-    bert_config.add_argument('--num_attention_heads', type=int, default=12,
-                             help='Number of attention heads for each attention layer in the Transformer encoder.')
-
-    bert_config.add_argument('--intermediate_size', type=int, default=512,
-                             help='Dimensionality of the "intermediate" (i.e. feed-forward) layer in the Transformer encoder.')
-
-    bert_config.add_argument('--hidden_act', type=str, default='gelu',
-                             choices=['gelu', 'relu', 'silu', 'gelu_new'],
-                             help='Non-linear activation function in the encoder and pooler.')
-
-    bert_config.add_argument('--hidden_dropout_prob', type=float, default=0.1,
-                             help='Dropout probability for all fully connected layers in the embeddings, encoder, and pooler.')
-
-    bert_config.add_argument('--attention_probs_dropout_prob', type=float, default=0.1,
-                             help='Dropout ratio for the attention probabilities.')
-
-    bert_config.add_argument('--max_position_embeddings', type=int, default=512,
-                             help='Maximum sequence length that this model might ever be used with.')
-
-    bert_config.add_argument('--type_vocab_size', type=int, default=2,
-                             help='Vocabulary size of the token_type_ids passed when calling BertModel.')
-
-    bert_config.add_argument('--initializer_range', type=float, default=0.02,
-                             help='Standard deviation of the truncated_normal_initializer for initializing all weight matrices.')
-
-    bert_config.add_argument('--layer_norm_eps', type=float, default=1e-12,
-                             help='Epsilon used by the layer normalization layers.')
+    # https://github.com/huggingface/transformers/blob/main/src/transformers/models/albert/configuration_albert.py#L36
+    parser.add_argument('--config_json', type=str,
+                        help='Path to the json file containing model configuration.')
 
     # TrainingArgs
     # https://huggingface.co/docs/transformers/v4.20.0/en/main_classes/trainer#transformers.TrainingArguments
@@ -149,7 +121,7 @@ def parse_command_line_arguments(command_line_args=None):
         args.per_device_eval_batch_size = args.per_device_train_batch_size
 
     huggingface_args = dict({})
-    group_list = ['BertConfig', 'TrainingArgs']
+    group_list = ['TrainingArgs']
     for group in parser._action_groups:
         if group.title in group_list:
             huggingface_args[group.title] = {a.dest:getattr(args, a.dest, None) for a in group._group_actions}

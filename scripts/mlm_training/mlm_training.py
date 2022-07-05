@@ -1,6 +1,8 @@
 import torch
 import transformers
 from transformers import (
+    AlbertConfig,
+    AlbertForMaskedLM,
     BertConfig, 
     BertForMaskedLM, 
     DataCollatorForLanguageModeling,
@@ -11,9 +13,14 @@ import wandb
 print(f'Using transformers version: {transformers.__version__}')
 
 from rxn_barriers.data import RxnDatasetMLM
-from rxn_barriers.tokenization import SmilesTokenizer
+from rxn_barriers.tokenization import SmilesAlbertTokenizer, SmilesBertTokenizer
 from rxn_barriers.utils.parsing import parse_command_line_arguments
 
+
+MODEL_CLASSES = {
+            'albert': (AlbertConfig, AlbertForMaskedLM, SmilesAlbertTokenizer),
+            'bert': (BertConfig, BertForMaskedLM, SmilesBertTokenizer),
+}
 
 args, huggingface_args = parse_command_line_arguments()
 print('Using arguments...')
@@ -24,19 +31,25 @@ for arg in vars(args):
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
 
+config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type.lower()]
+
 # create tokenizer
-smi_tokenizer = SmilesTokenizer(vocab_file=args.vocab_file, 
+smi_tokenizer = tokenizer_class(vocab_file=args.vocab_file, 
                                 # must add this to be able to pad during preprocessing later on
                                 model_max_length=args.max_position_embeddings)
 
-bert_config_dict = huggingface_args['BertConfig']
-bert_config_dict['vocab_size'] = smi_tokenizer.vocab_size
+# set model configuration
+with open(args.config_json, 'r') as f:
+    config_dict = json.load(f)
+config_dict['vocab_size'] = smi_tokenizer.vocab_size
+for key, value in config_dict.items():
+    setattr(args, key, value)
+config = config_class(**config_dict)
 
-# set a configuration for our Bert model
-config = BertConfig(**bert_config_dict)
+
 
 # initialize the model from a configuration without pretrained weights
-model = BertForMaskedLM(config=config)
+model = model_class(config=config)
 print(f'Num parameters: {model.num_parameters():,}')
 print(f'Model architecture is:\n{model}')
 
@@ -61,6 +74,6 @@ trainer = Trainer(model=model,
                   train_dataset=train_dataset,
                   eval_dataset=test_dataset,
                   tokenizer=smi_tokenizer,
-    )
+                  )
 
 trainer.train()

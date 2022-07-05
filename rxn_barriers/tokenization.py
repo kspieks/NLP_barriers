@@ -1,12 +1,12 @@
 import re
 from typing import List
 
-from transformers import BertTokenizer
+from transformers import AlbertTokenizer, BertTokenizer
 
 
 SMI_REGEX_PATTERN =  r"(\%\([0-9]{3}\)|\[[^\]]+]|Br?|Cl?|N|O|S|P|F|I|b|c|n|o|s|p|\||\(|\)|\.|=|#|-|\+|\\|\/|:|~|@|\?|>>?|\*|\$|\%[0-9]{2}|[0-9])"
 
-class SmilesTokenizer(BertTokenizer):
+class SmilesBertTokenizer(BertTokenizer):
     """
     Constructs a SmilesBertTokenizer.
     Adapted from https://github.com/rxn4chemistry/rxnfp
@@ -27,7 +27,7 @@ class SmilesTokenizer(BertTokenizer):
         **kwargs,
     ) -> None:
         """
-        Constructs an SmilesTokenizer.
+        Constructs an SmilesBertTokenizer.
         
         Args:
             vocab_file: vocabulary file containing tokens.
@@ -39,6 +39,70 @@ class SmilesTokenizer(BertTokenizer):
         """
         super().__init__(
             vocab_file=vocab_file,
+            unk_token=unk_token,
+            sep_token=sep_token,
+            pad_token=pad_token,
+            cls_token=cls_token,
+            mask_token=mask_token,
+            do_lower_case=do_lower_case,
+            **kwargs,
+        )
+
+        # define tokenization utilities
+        self.tokenizer = RegexTokenizer()
+
+    @property
+    def vocab_list(self) -> List[str]:
+        """
+        List vocabulary tokens.
+
+        Returns:
+            a list of vocabulary tokens.
+        """
+        return list(self.vocab.keys())
+
+    def _tokenize(self, text: str) -> List[str]:
+        """
+        Tokenize a text representing an enzymatic reaction with AA sequence information.
+        
+        Args:
+            text: text to tokenize.
+        
+        Returns:
+            extracted tokens.
+        """
+        return self.tokenizer.tokenize(text)
+
+
+class SmilesAlbertTokenizer(AlbertTokenizer):
+    """
+    Constructs a SmilesAlertTokenizer.
+    https://github.com/huggingface/transformers/blob/main/src/transformers/models/albert/tokenization_albert.py#L59
+    
+    Args:
+        vocab_file: path to a token per line vocabulary file.
+    """
+
+    def __init__(
+        self,
+        vocab_file: str,
+        bos_token: str = "[CLS]",
+        eos_token: str = "[SEP]",
+        unk_token: str = "<unk>",
+        sep_token: str = "[SEP]",
+        pad_token: str = "<pad>",
+        cls_token: str = "[CLS]",
+        mask_token: str = "[MASK]",
+        do_lower_case=False,
+        **kwargs,
+    ) -> None:
+        """
+        Constructs an SmilesAlbertTokenizer.
+        """
+        super().__init__(
+            vocab_file=vocab_file,
+            bos_token=bos_token,
+            eos_token=eos_token,
             unk_token=unk_token,
             sep_token=sep_token,
             pad_token=pad_token,
