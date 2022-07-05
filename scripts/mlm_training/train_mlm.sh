@@ -8,7 +8,13 @@ vocab_file=$NLP_BARRIERS/data/mlm_RMG/vocab.txt
 train_data=$NLP_BARRIERS/data/mlm_RMG/mlm_RMG_train.txt
 val_data=$NLP_BARRIERS/data/mlm_RMG/mlm_RMG_val.txt
 
-# Config arguments
+# wandb args
+wandb_project='MLM_supercloud'
+wandb_entity='kspieker'
+wandb_mode='offline'
+
+# config args
+model_type=bert
 config_json=bert_config.json
 
 # TrainingArgs
@@ -28,7 +34,7 @@ per_device_train_batch_size=32
 
 evaluation_strategy='epoch'
 save_strategy='epoch'
-save_total_limit=5
+save_total_limit=3
 
 source activate huggingface
 which python
@@ -40,6 +46,10 @@ python -u $NLP_BARRIERS/scripts/mlm_training/mlm_training.py \
 --vocab_file $vocab_file \
 --train_data $train_data \
 --val_data $val_data \
+--wandb_project $wandb_project \
+--wandb_entity $wandb_entity \
+--wandb_mode $wandb_mode \
+--model_type $model_type \
 --config_json $config_json \
 --output_dir $output_dir \
 --report_to $report_to \

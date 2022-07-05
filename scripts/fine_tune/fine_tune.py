@@ -16,22 +16,33 @@ from rxn_barriers.utils.parsing import parse_command_line_arguments
 from rxn_barriers.utils.nn_utils import CustomTrainer
 
 
+MODEL_CLASSES = {
+            'albert': (AlbertConfig, AlbertForMaskedLM, SmilesTokenizer),
+            'bert': (BertConfig, BertForMaskedLM, SmilesTokenizer),
+}
+
 args, huggingface_args = parse_command_line_arguments()
-print('Using arguments...')
-for arg in vars(args):
-    print(f'{arg}: {getattr(args, arg)}')
 
 # set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
 
+config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type.lower()]
+
 # create tokenizer
-smi_tokenizer = SmilesTokenizer(vocab_file=args.vocab_file, 
-                                model_max_length=args.max_position_embeddings,
+with open(args.config_json, 'r') as f:
+    config_dict = json.load(f)
+smi_tokenizer = tokenizer_class(vocab_file=args.vocab_file, 
+                                model_max_length=config_dict['max_position_embeddings'],
                                 )
 
+
+print('Using arguments...')
+for arg in vars(args):
+    print(f'{arg}: {getattr(args, arg)}')
+
 # instantiate pretrained model
-model = BertForSequenceClassification.from_pretrained(
+model = model_class.from_pretrained(
     args.final_mlm_checkpoint,
     problem_type='regression',
     num_labels=1,
@@ -58,9 +69,10 @@ print(f'mean: {train_dataset.mean} +- std {train_dataset.std} kcal/mol')
 val_dataset.labels = scaler.transform(torch.tensor(val_dataset.labels, dtype=torch.float))
 print(f'Val scaled mean: {val_dataset.mean} +- std {val_dataset.std} kcal/mol')
 
-wandb.init(project="fine_tune_supercloud",
-           entity="kspieker",
-           mode='offline',
+wandb.init(project=args.wandb_project,
+           entity=args.wandb_entity,
+           mode=args.mode,
+           config=args,
            )
 
 training_args_dict = huggingface_args['TrainingArgs']

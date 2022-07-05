@@ -17,10 +17,6 @@ def parse_command_line_arguments(command_line_args=None):
     parser.add_argument('--vocab_file', type=str,
                         help="Path to the text file containing tokenizer's vocab.")
 
-    parser.add_argument('--model_type', type=str, default='bert',
-                        choices=['bert', 'albert'],
-                        help="Model architecture.")
-
     parser.add_argument('--train_data', type=str,
                         help='Path to training data.')
 
@@ -31,15 +27,31 @@ def parse_command_line_arguments(command_line_args=None):
                         help='Path to the testing data.')
 
     parser.add_argument('--final_mlm_checkpoint', type=str,
-                        help='Path to the best MLM checkpoint.')
+                        help='Path to the best MLM checkpoint used for fine tuning.')
 
     parser.add_argument('--targets', nargs='+',
-                        help='Name of columns to use as regression targets.')
+                        help='Name of columns to use as regression targets during fine tuning.')
+
+    # wandb arguements
+    # https://docs.wandb.ai/ref/python/init
+    parser.add_argument('--wandb_project', type=str,
+                        help='Project name.')
+
+    parser.add_argument('--wandb_entity', type=str,
+                        help='Username.')
+
+    parser.add_argument('--wandb_mode', type=str, default='offline',
+                        help='Project name.')
+
 
     # Config arguments
     # https://huggingface.co/docs/transformers/model_doc/bert#transformers.BertConfig
     # https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/configuration_bert.py#L72
     # https://github.com/huggingface/transformers/blob/main/src/transformers/models/albert/configuration_albert.py#L36
+    parser.add_argument('--model_type', type=str, default='bert',
+                        choices=['bert', 'albert'],
+                        help="Model architecture.")
+
     parser.add_argument('--config_json', type=str,
                         help='Path to the json file containing model configuration.')
 

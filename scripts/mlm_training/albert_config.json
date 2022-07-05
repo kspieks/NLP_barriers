@@ -10,11 +10,10 @@
   "intermediate_size": 512,
   "layer_norm_eps": 1e-12,
   "max_position_embeddings": 128,
-  "model_type": "bert",
   "num_attention_heads": 8,
   "num_hidden_layers": 6,
   "num_hidden_groups": 1,
   "position_embedding_type": "absolute",
   "type_vocab_size": 2,
-  "use_cache": true,
+  "use_cache": true
 }
