@@ -4,24 +4,20 @@ NLP_BARRIERS=/home/gridsan/kspieker/RMG/NLP_barriers
 export PYTHONPATH=$NLP_BARRIERS:$PYTHONPATH
 
 # general args
-vocab_file=$NLP_BARRIERS/data/mlm_USPTO/original/vocab.txt
-train_data=$NLP_BARRIERS/data/mlm_USPTO/with_Hs/mlm_train_file_Hs.txt
-val_data=$NLP_BARRIERS/data/mlm_USPTO/with_Hs/mlm_eval_file_Hs.txt
+vocab_file=$NLP_BARRIERS/data/mlm_RMG/vocab.txt
+train_data=$NLP_BARRIERS/data/mlm_RMG/mlm_RMG_train.txt
+val_data=$NLP_BARRIERS/data/mlm_RMG/mlm_RMG_val.txt
 
-# BertConfig arguments
-hidden_size=512
-num_hidden_layers=6
-num_attention_heads=8
-intermediate_size=512
-hidden_act='gelu'
-hidden_dropout_prob=0.1
-attention_probs_dropout_prob=0.1
-max_position_embeddings=512
+# Config arguments
+config_json=bert_config.json
 
 # TrainingArgs
 output_dir='MLM_test'
 report_to='wandb'
 dataloader_num_workers=6
+
+# dataloader_pin_memory
+# fp16
 
 learning_rate=1e-4
 lr_scheduler_type='cosine'
@@ -44,14 +40,7 @@ python -u $NLP_BARRIERS/scripts/mlm_training/mlm_training.py \
 --vocab_file $vocab_file \
 --train_data $train_data \
 --val_data $val_data \
---hidden_size $hidden_size \
---num_hidden_layers $num_hidden_layers \
---num_attention_heads $num_attention_heads \
---intermediate_size $intermediate_size \
---hidden_act $hidden_act \
---hidden_dropout_prob $hidden_dropout_prob \
---attention_probs_dropout_prob $attention_probs_dropout_prob \
---max_position_embeddings $max_position_embeddings \
+--config_json $config_json \
 --output_dir $output_dir \
 --report_to $report_to \
 --dataloader_num_workers $dataloader_num_workers \
@@ -61,5 +50,9 @@ python -u $NLP_BARRIERS/scripts/mlm_training/mlm_training.py \
 --warmup_ratio $warmup_ratio \
 --max_grad_norm $max_grad_norm \
 --num_train_epochs $num_train_epochs \
---per_device_train_batch_size $per_device_train_batch_size
+--per_device_train_batch_size $per_device_train_batch_size \
+--evaluation_strategy $evaluation_strategy \
+--load_best_model_at_end $load_best_model_at_end \
+--save_strategy $save_strategy \
+--save_total_limit $save_total_limit
 
