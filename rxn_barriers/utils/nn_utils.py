@@ -26,22 +26,24 @@ class CustomTrainer(Trainer):
         super().__init__(*args, **kwargs)
 
         self.scaler = scaler
+        self.compute_metrics = self._compute_metrics
 
-    def compute_metrics(self, eval_pred):
+    def _compute_metrics(self, eval_pred):
         """
         Must take an [`EvalPrediction`] and return
         a dictionary string to metric values.
         """
         predictions, labels = eval_pred
+        predictions, labels = torch.tensor(predictions), torch.tensor(labels)
         loss_func = MSELoss()
-        scaled_loss = loss_func(logits, labels)
+        scaled_loss = loss_func(labels, predictions)
 
         scaled_mae = mean_absolute_error(labels, predictions)
         scaled_rmse = mean_squared_error(labels, predictions, squared=False)
         scaled_R2 = r2_score(labels, predictions)
 
-        labels_unscaled = self.scaler.inverse_transform(labels)
-        preds_unscaled = self.scaler.inverse_transform(predictions)
+        labels_unscaled = self._scaler.inverse_transform(labels)
+        preds_unscaled = self._scaler.inverse_transform(predictions)
         
         mae = mean_absolute_error(labels_unscaled, preds_unscaled)
         rmse = mean_squared_error(labels_unscaled, preds_unscaled, squared=False)
@@ -49,8 +51,8 @@ class CustomTrainer(Trainer):
 
         output_dict = {
             'scaled_MSE_loss': scaled_loss,
-            'scaled_mae': scaled_mae,
-            'scaled_rmse': scaled_rmse,
+            'scaled_MAE': scaled_mae,
+            'scaled_RMSE': scaled_rmse,
             'scaled_R2': scaled_R2,
             'MAE': mae,
             'RMSE': rmse,
