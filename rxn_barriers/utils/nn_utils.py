@@ -25,7 +25,7 @@ class CustomTrainer(Trainer):
     def __init__(self, scaler=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.scaler = scaler
+        self._scaler = scaler
         self.compute_metrics = self._compute_metrics
 
     def _compute_metrics(self, eval_pred):
@@ -42,21 +42,30 @@ class CustomTrainer(Trainer):
         scaled_rmse = mean_squared_error(labels, predictions, squared=False)
         scaled_R2 = r2_score(labels, predictions)
 
-        labels_unscaled = self._scaler.inverse_transform(labels)
-        preds_unscaled = self._scaler.inverse_transform(predictions)
-        
-        mae = mean_absolute_error(labels_unscaled, preds_unscaled)
-        rmse = mean_squared_error(labels_unscaled, preds_unscaled, squared=False)
-        R2 = r2_score(labels_unscaled, preds_unscaled)
+        if self._scaler is None:
+            output_dict = {
+                'MSE_loss': scaled_loss,
+                'MAE': scaled_mae,
+                'RMSE': scaled_rmse,
+                'R2': scaled_R2,
+            }
+            return output_dict
+        else:
+            labels_unscaled = self._scaler.inverse_transform(labels)
+            preds_unscaled = self._scaler.inverse_transform(predictions)
+            
+            mae = mean_absolute_error(labels_unscaled, preds_unscaled)
+            rmse = mean_squared_error(labels_unscaled, preds_unscaled, squared=False)
+            R2 = r2_score(labels_unscaled, preds_unscaled)
 
-        output_dict = {
-            'scaled_MSE_loss': scaled_loss,
-            'scaled_MAE': scaled_mae,
-            'scaled_RMSE': scaled_rmse,
-            'scaled_R2': scaled_R2,
-            'MAE': mae,
-            'RMSE': rmse,
-            'R2': R2,
-        }
-        return output_dict
+            output_dict = {
+                'scaled_MSE_loss': scaled_loss,
+                'scaled_MAE': scaled_mae,
+                'scaled_RMSE': scaled_rmse,
+                'scaled_R2': scaled_R2,
+                'MAE': mae,
+                'RMSE': rmse,
+                'R2': R2,
+            }
+            return output_dict
 
