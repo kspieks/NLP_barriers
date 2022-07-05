@@ -10,10 +10,10 @@ from transformers import (
 )
 import wandb
 
-from rxn_barriers.data import RxnDatasetRegression
+from rxn_barriers.data import RxnDatasetRegression, TorchStandardScaler
 from rxn_barriers.tokenization import SmilesTokenizer
 from rxn_barriers.utils.parsing import parse_command_line_arguments
-from rxn_barriers.utils.nn_utils import compute_metrics
+from rxn_barriers.utils.nn_utils import CustomTrainer
 
 
 args, huggingface_args = parse_command_line_arguments()
@@ -43,9 +43,20 @@ print(f'Model architecture is:\n{model}')
 train_dataset = RxnDatasetRegression(data_path=args.train_data, tokenizer=smi_tokenizer, targets=args.targets)
 val_dataset = RxnDatasetRegression(data_path=args.val_data, tokenizer=smi_tokenizer, targets=args.targets)
 test_dataset = RxnDatasetRegression(data_path=args.test_data, tokenizer=smi_tokenizer, targets=args.targets)
-print(f'\nTraining dE0 mean +- 1 std: {train_dataset.mean} +- {train_dataset.std} kcal/mol')
-print(f'Validation dE0 mean +- 1 std: {val_dataset.mean} +- {val_dataset.std} kcal/mol')
-print(f'Testing dE0 mean +- 1 std: {test_dataset.mean} +- {test_dataset.std} kcal/mol\n')
+
+scaler = TorchStandardScaler()
+scaler.fit(torch.tensor(train_dataset.labels, dtype=torch.float))
+
+print(f'\nTraining mean +- 1 std: {train_dataset.mean} +- {train_dataset.std} kcal/mol')
+print(f'Validation mean +- 1 std: {val_dataset.mean} +- {val_dataset.std} kcal/mol')
+print(f'Testing mean +- 1 std: {test_dataset.mean} +- {test_dataset.std} kcal/mol\n')
+
+train_dataset.labels = scaler.transform(torch.tensor(train_dataset.labels, dtype=torch.float))
+print(f'Training after z-score...')
+print(f'mean: {train_dataset.mean} +- std {train_dataset.std} kcal/mol')
+
+val_dataset.labels = scaler.transform(torch.tensor(val_dataset.labels, dtype=torch.float))
+print(f'Val scaled mean: {val_dataset.mean} +- std {val_dataset.std} kcal/mol')
 
 wandb.init(project="fine_tune_supercloud",
            entity="kspieker",
@@ -55,12 +66,12 @@ wandb.init(project="fine_tune_supercloud",
 training_args_dict = huggingface_args['TrainingArgs']
 training_args = TrainingArguments(**training_args_dict)
 
-trainer = Trainer(model=model,
-                  args=training_args,
-                  train_dataset=train_dataset,
-                  eval_dataset=val_dataset,
-                  tokenizer=smi_tokenizer,
-                  compute_metrics=compute_metrics,
-                  )
+trainer = CustomTrainer(scaler=scaler,
+                        model=model,
+                        args=training_args,
+                        train_dataset=train_dataset,
+                        eval_dataset=val_dataset,
+                        tokenizer=smi_tokenizer,
+                        )
 
 trainer.train()
