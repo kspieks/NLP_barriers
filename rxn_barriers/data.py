@@ -109,11 +109,11 @@ class RxnDatasetRegression(Dataset):
         
     @property
     def mean(self):
-        return np.mean(self.labels, axis=0)
+        return self.labels.mean(dim=0, keepdim=True)
 
     @property
     def std(self):
-        return np.std(self.labels, axis=0)
+        return self.labels.std(dim=0, unbiased=False, keepdim=True)
 
     def get_targets(self):
         """Create list of targets for regression"""
