@@ -47,6 +47,9 @@ python -u $NLP_BARRIERS/scripts/fine_tune/fine_tune.py \
 --test_data $test_data \
 --best_mlm_model $best_mlm_model \
 --targets $targets \
+--wandb_project $wandb_project \
+--wandb_entity $wandb_entity \
+--wandb_mode $wandb_mode \
 --model_type $model_type \
 --config_json $config_json \
 --output_dir $output_dir \

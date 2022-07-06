@@ -74,7 +74,7 @@ print(f'Val scaled mean: {val_dataset.mean} +- std {val_dataset.std} kcal/mol')
 
 wandb.init(project=args.wandb_project,
            entity=args.wandb_entity,
-           mode=args.mode,
+           mode=args.wandb_mode,
            config=args,
            )
 
