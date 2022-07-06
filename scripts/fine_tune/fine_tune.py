@@ -3,6 +3,8 @@ import os
 import torch
 import transformers
 from transformers import (
+    AlbertConfig,
+    AlbertForSequenceClassification,
     BertConfig,
     BertForSequenceClassification,
     Trainer, 
@@ -17,8 +19,8 @@ from rxn_barriers.utils.nn_utils import CustomTrainer
 
 
 MODEL_CLASSES = {
-            'albert': (AlbertConfig, AlbertForMaskedLM, SmilesTokenizer),
-            'bert': (BertConfig, BertForMaskedLM, SmilesTokenizer),
+            'albert': (AlbertConfig, AlbertForSequenceClassification, SmilesTokenizer),
+            'bert': (BertConfig, BertForSequenceClassification, SmilesTokenizer),
 }
 
 args, huggingface_args = parse_command_line_arguments()
