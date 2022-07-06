@@ -11,10 +11,19 @@ test_data=PATH/TO/test.csv
 best_mlm_model=PATH/TO/final_mlm_checkpoint
 targets="dE0"
 
+# wandb args
+wandb_project='fine_tune'
+wandb_entity='kspieker'
+wandb_mode='offline'
+
+# config args
+model_type=bert
+config_json=bert_config.json
+
 # TrainingArgs
 output_dir='fine_tune'
 report_to='wandb'
-dataloader_num_workers=6
+dataloader_num_workers=8
 
 learning_rate=1e-4
 lr_scheduler_type='cosine'
@@ -25,7 +34,7 @@ per_device_train_batch_size=32
 
 evaluation_strategy='epoch'
 save_strategy='epoch'
-save_total_limit=5
+save_total_limit=3
 
 source activate huggingface
 which python
@@ -38,6 +47,8 @@ python -u $NLP_BARRIERS/scripts/fine_tune/fine_tune.py \
 --test_data $test_data \
 --best_mlm_model $best_mlm_model \
 --targets $targets \
+--model_type $model_type \
+--config_json $config_json \
 --output_dir $output_dir \
 --report_to $report_to \
 --dataloader_num_workers $dataloader_num_workers \
@@ -47,5 +58,9 @@ python -u $NLP_BARRIERS/scripts/fine_tune/fine_tune.py \
 --warmup_ratio $warmup_ratio \
 --max_grad_norm $max_grad_norm \
 --num_train_epochs $num_train_epochs \
---per_device_train_batch_size $per_device_train_batch_size
+--per_device_train_batch_size $per_device_train_batch_size \
+--evaluation_strategy $evaluation_strategy \
+--load_best_model_at_end $load_best_model_at_end \
+--save_strategy $save_strategy \
+--save_total_limit $save_total_limit
 

@@ -20,7 +20,7 @@ config_json=bert_config.json
 # TrainingArgs
 output_dir='MLM_test'
 report_to='wandb'
-dataloader_num_workers=6
+dataloader_num_workers=8
 
 # dataloader_pin_memory
 # fp16
