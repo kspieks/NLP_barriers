@@ -63,7 +63,7 @@ data_collator = DataCollatorForLanguageModeling(
 
 wandb.init(project=args.wandb_project,
            entity=args.wandb_entity,
-           mode=args.mode,
+           mode=args.wandb_mode,
            config=args,
            )
 
