@@ -48,7 +48,7 @@ for arg in vars(args):
 model = model_class.from_pretrained(
     args.final_mlm_checkpoint,
     problem_type='regression',
-    num_labels=1,
+    num_labels=len(args.targets),
 )
 print(f'Num parameters: {model.num_parameters():,}')
 print(f'Model architecture is:\n{model}')
