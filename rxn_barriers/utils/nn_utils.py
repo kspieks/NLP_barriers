@@ -22,10 +22,11 @@ class CustomTrainer(Trainer):
     """
     Create custom Trainer class
     """
-    def __init__(self, scaler=None, *args, **kwargs):
+    def __init__(self, scaler=None, targets=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._scaler = scaler
+        self._targets = targets
         self.compute_metrics = self._compute_metrics
 
     def _compute_metrics(self, eval_pred):
@@ -33,6 +34,7 @@ class CustomTrainer(Trainer):
         Must take an [`EvalPrediction`] and return
         a dictionary string to metric values.
         """
+        # convert numpy arrays to torch tensors
         predictions, labels = eval_pred
         predictions, labels = torch.tensor(predictions), torch.tensor(labels)
         loss_func = MSELoss()
@@ -49,6 +51,13 @@ class CustomTrainer(Trainer):
                 'RMSE': scaled_rmse,
                 'R2': scaled_R2,
             }
+            if len(self._targets) > 1:
+                for i, target in enumerate(self._targets):
+                    output_dict[f'MAE_{target}'] = mean_absolute_error(labels.view(-1, i), predictions.view(-1, i))
+                    output_dict[f'RMSE_{target}'] = mean_squared_error(labels.view(-1, i), predictions.view(-1, i), squared=False)
+                    output_dict[f'R2_{target}'] = r2_score(labels.view(-1, i), predictions.view(-1, i))
+                    scaled_R2 = r2_score(labels.view(-1, i), predictions.view(-1, i))
+
             return output_dict
         else:
             labels_unscaled = self._scaler.inverse_transform(labels)
@@ -67,5 +76,13 @@ class CustomTrainer(Trainer):
                 'RMSE': rmse,
                 'R2': R2,
             }
+
+            if len(self._targets) > 1:
+                for i, target in enumerate(self._targets):
+                    output_dict[f'MAE_{target}'] = mean_absolute_error(labels.view(-1, i), predictions.view(-1, i))
+                    output_dict[f'RMSE_{target}'] = mean_squared_error(labels.view(-1, i), predictions.view(-1, i), squared=False)
+                    output_dict[f'R2_{target}'] = r2_score(labels.view(-1, i), predictions.view(-1, i))
+                    scaled_R2 = r2_score(labels.view(-1, i), predictions.view(-1, i))
+
             return output_dict
 

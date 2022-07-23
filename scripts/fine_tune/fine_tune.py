@@ -82,6 +82,7 @@ training_args_dict = huggingface_args['TrainingArgs']
 training_args = TrainingArguments(**training_args_dict)
 
 trainer = CustomTrainer(scaler=scaler,
+                        targets=args.targets,
                         model=model,
                         args=training_args,
                         train_dataset=train_dataset,
