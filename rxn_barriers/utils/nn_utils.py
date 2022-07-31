@@ -53,10 +53,10 @@ class CustomTrainer(Trainer):
             }
             if len(self._targets) > 1:
                 for i, target in enumerate(self._targets):
-                    output_dict[f'MAE_{target}'] = mean_absolute_error(labels.view(-1, i), predictions.view(-1, i))
-                    output_dict[f'RMSE_{target}'] = mean_squared_error(labels.view(-1, i), predictions.view(-1, i), squared=False)
-                    output_dict[f'R2_{target}'] = r2_score(labels.view(-1, i), predictions.view(-1, i))
-                    scaled_R2 = r2_score(labels.view(-1, i), predictions.view(-1, i))
+                    output_dict[f'MAE_{target}'] = mean_absolute_error(labels[:, i], predictions[:, i])
+                    output_dict[f'RMSE_{target}'] = mean_squared_error(labels[:, i], predictions[:, i], squared=False)
+                    output_dict[f'R2_{target}'] = r2_score(labels[:, i], predictions[:, i])
+                    scaled_R2 = r2_score(labels[:, i], predictions[:, i])
 
             return output_dict
         else:
@@ -79,10 +79,10 @@ class CustomTrainer(Trainer):
 
             if len(self._targets) > 1:
                 for i, target in enumerate(self._targets):
-                    output_dict[f'MAE_{target}'] = mean_absolute_error(labels.view(-1, i), predictions.view(-1, i))
-                    output_dict[f'RMSE_{target}'] = mean_squared_error(labels.view(-1, i), predictions.view(-1, i), squared=False)
-                    output_dict[f'R2_{target}'] = r2_score(labels.view(-1, i), predictions.view(-1, i))
-                    scaled_R2 = r2_score(labels.view(-1, i), predictions.view(-1, i))
+                    output_dict[f'MAE_{target}'] = mean_absolute_error(labels_unscaled[:, i], preds_unscaled[:, i])
+                    output_dict[f'RMSE_{target}'] = mean_squared_error(labels_unscaled[:, i], preds_unscaled[:, i], squared=False)
+                    output_dict[f'R2_{target}'] = r2_score(labels_unscaled[:, i], preds_unscaled[:, i])
+                    scaled_R2 = r2_score(labels_unscaled[:, i], preds_unscaled[:, i])
 
             return output_dict
 
