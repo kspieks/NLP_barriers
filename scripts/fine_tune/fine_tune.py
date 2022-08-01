@@ -83,6 +83,7 @@ training_args = TrainingArguments(**training_args_dict)
 
 trainer = CustomTrainer(scaler=scaler,
                         targets=args.targets,
+                        mode='val',
                         model=model,
                         args=training_args,
                         train_dataset=train_dataset,
@@ -91,3 +92,21 @@ trainer = CustomTrainer(scaler=scaler,
                         )
 
 trainer.train()
+
+# get validation predictions
+output = trainer.evaluate()
+print(output)
+
+# get testing predictions
+trainer = CustomTrainer(scaler=scaler,
+                        targets=args.targets,
+                        mode='test',
+                        model=model,
+                        args=training_args,
+                        train_dataset=train_dataset,
+                        eval_dataset=test_dataset,
+                        tokenizer=smi_tokenizer,
+                        )
+output = trainer.evaluate()
+print(output)
+

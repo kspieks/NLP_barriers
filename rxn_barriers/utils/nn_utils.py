@@ -22,11 +22,12 @@ class CustomTrainer(Trainer):
     """
     Create custom Trainer class
     """
-    def __init__(self, scaler=None, targets=None, *args, **kwargs):
+    def __init__(self, scaler=None, targets=None, mode='val', *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._scaler = scaler
         self._targets = targets
+        self._mode = mode
         self.compute_metrics = self._compute_metrics
 
     def _compute_metrics(self, eval_pred):
@@ -83,6 +84,13 @@ class CustomTrainer(Trainer):
                     output_dict[f'RMSE_{target}'] = mean_squared_error(labels_unscaled[:, i], preds_unscaled[:, i], squared=False)
                     output_dict[f'R2_{target}'] = r2_score(labels_unscaled[:, i], preds_unscaled[:, i])
                     scaled_R2 = r2_score(labels_unscaled[:, i], preds_unscaled[:, i])
+
+            df_true_scaled = pd.DataFrame(labels, columns=[f'{target}_true_scaled' for target in self._targets])
+            df_preds_scaled = pd.DataFrame(predictions, columns=[f'{target}_preds_scaled' for target in self._targets])
+            df_true = pd.DataFrame(labels_unscaled, columns=[f'{target}_true' for target in self._targets])
+            df_preds = pd.DataFrame(preds_unscaled, columns=[f'{target}_preds' for target in self._targets])
+            df = pd.concat([df_true_scaled, df_preds_scaled, df_true, df_preds], axis=1)
+            df.to_csv(f'{self._mode}_preds_vs_true.csv', index=False)
 
             return output_dict
 
