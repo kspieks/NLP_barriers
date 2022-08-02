@@ -72,6 +72,9 @@ print(f'mean: {train_dataset.mean} +- std {train_dataset.std} kcal/mol')
 val_dataset.labels = scaler.transform(torch.tensor(val_dataset.labels, dtype=torch.float))
 print(f'Val scaled mean: {val_dataset.mean} +- std {val_dataset.std} kcal/mol')
 
+test_dataset.labels = scaler.transform(torch.tensor(test_dataset.labels, dtype=torch.float))
+print(f'Test scaled mean: {test_dataset.mean} +- std {test_dataset.std} kcal/mol')
+
 wandb.init(project=args.wandb_project,
            entity=args.wandb_entity,
            mode=args.wandb_mode,
@@ -90,23 +93,18 @@ trainer = CustomTrainer(scaler=scaler,
                         eval_dataset=val_dataset,
                         tokenizer=smi_tokenizer,
                         )
-
 trainer.train()
 
 # get validation predictions
-output = trainer.evaluate()
+output = trainer.evaluate(eval_dataset=val_dataset,
+                          metric_key_prefix='val',
+                         )
+print('Output from validation')
 print(output)
 
 # get testing predictions
-trainer = CustomTrainer(scaler=scaler,
-                        targets=args.targets,
-                        mode='test',
-                        model=model,
-                        args=training_args,
-                        train_dataset=train_dataset,
-                        eval_dataset=test_dataset,
-                        tokenizer=smi_tokenizer,
-                        )
-output = trainer.evaluate()
+output = trainer.evaluate(eval_dataset=test_dataset,
+                          metric_key_prefix='test',)
+print('Output from testing')
 print(output)
 
