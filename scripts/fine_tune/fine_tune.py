@@ -8,7 +8,6 @@ from transformers import (
     AlbertForSequenceClassification,
     BertConfig,
     BertForSequenceClassification,
-    Trainer, 
     TrainingArguments,
 )
 import wandb
@@ -39,7 +38,6 @@ smi_tokenizer = tokenizer_class(vocab_file=args.vocab_file,
                                 model_max_length=config_dict['max_position_embeddings'],
                                 )
 
-
 print('Using arguments...')
 for arg in vars(args):
     print(f'{arg}: {getattr(args, arg)}')
@@ -59,20 +57,24 @@ val_dataset = RxnDatasetRegression(data_path=args.val_data, tokenizer=smi_tokeni
 test_dataset = RxnDatasetRegression(data_path=args.test_data, tokenizer=smi_tokenizer, targets=args.targets)
 
 scaler = TorchStandardScaler()
-scaler.fit(torch.tensor(train_dataset.labels, dtype=torch.float))
+targets = torch.tensor(train_dataset.labels, requires_grad=False)
+scaler.fit(targets)
 
 print(f'\nTraining mean +- 1 std: {train_dataset.mean} +- {train_dataset.std} kcal/mol')
 print(f'Validation mean +- 1 std: {val_dataset.mean} +- {val_dataset.std} kcal/mol')
 print(f'Testing mean +- 1 std: {test_dataset.mean} +- {test_dataset.std} kcal/mol\n')
 
-train_dataset.labels = scaler.transform(torch.tensor(train_dataset.labels, dtype=torch.float))
+train_dataset.labels = scaler.transform(torch.tensor(train_dataset.labels, requires_grad=False)).detach().cpu().numpy()
+print(f'line 69 type(train_dataset.labels): {type(train_dataset.labels)}')
+print(f'line 69 type(train_dataset.labels[0]): {type(train_dataset.labels[0])}')
 print(f'Training after z-score...')
 print(f'mean: {train_dataset.mean} +- std {train_dataset.std} kcal/mol')
 
-val_dataset.labels = scaler.transform(torch.tensor(val_dataset.labels, dtype=torch.float))
+val_dataset.labels = scaler.transform(torch.tensor(val_dataset.labels, requires_grad=False)).detach().cpu().numpy()
+print(f'line 74 type(val_dataset.labels): {type(val_dataset.labels)}')
 print(f'Val scaled mean: {val_dataset.mean} +- std {val_dataset.std} kcal/mol')
 
-test_dataset.labels = scaler.transform(torch.tensor(test_dataset.labels, dtype=torch.float))
+test_dataset.labels = scaler.transform(torch.tensor(test_dataset.labels, requires_grad=False)).detach().cpu().numpy()
 print(f'Test scaled mean: {test_dataset.mean} +- std {test_dataset.std} kcal/mol')
 
 wandb.init(project=args.wandb_project,
@@ -82,6 +84,7 @@ wandb.init(project=args.wandb_project,
            )
 
 training_args_dict = huggingface_args['TrainingArgs']
+training_args_dict['logging_strategy'] = 'epoch'
 training_args = TrainingArguments(**training_args_dict)
 
 trainer = CustomTrainer(scaler=scaler,
@@ -107,4 +110,3 @@ output = trainer.evaluate(eval_dataset=test_dataset,
                           metric_key_prefix='test',)
 print('Output from testing')
 print(output)
-
