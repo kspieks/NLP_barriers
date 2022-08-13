@@ -21,6 +21,9 @@ conda install -c anaconda joblib ipython -y
 conda install -c conda-forge tqdm  -y
 conda install -c anaconda scikit-learn 
 
+# install hugging face transformers 
+pip install transformers
+
 # optional to view training results
 pip install wandb
 ```
