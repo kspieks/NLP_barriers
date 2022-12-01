@@ -139,3 +139,54 @@ class RxnDatasetRegression(Dataset):
         item = {key: torch.tensor(val) for key, val in self.encodings[idx].items()}
         item['labels'] = self.labels[idx]
         return item
+
+class RxnDatasetEmbeddingsRegression(RxnDatasetRegression):
+    def __init__(self,
+                 data_path,
+                 tokenizer,
+                 targets,
+                 embedder,
+                 ):
+        super().__init__(data_path, tokenizer, targets)
+        self.embedder = embedder
+        self.encodings = [self.preprocess(smi) for smi in self.df.rxn_smiles]
+        self.embeddings = torch.stack([self.embed(encoding) for encoding in self.encodings])
+
+    def preprocess(self, smi):
+        """
+        Proprocess and tokenize the reactant and product SMILES
+
+        Args:
+            smi: string representing the reaction SMILES
+
+        Returns:
+            tokenized_smi: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
+        """
+        rsmis, psmis = smi.split('>>')
+        if "." in rsmis:
+            rsmis = rsmis.split('.')
+        else:
+            rsmis = [rsmis, self.tokenizer.pad_token]
+        if "." in psmis:
+            psmis = psmis.split('.')
+        else:
+            psmis = [psmis, self.tokenizer.pad_token]
+        marked_smi = rsmis + [">>"] + psmis
+        return self.tokenizer(marked_smi, padding='max_length', truncation=True, return_tensors="pt")
+
+    def embed(self, encoding):
+        """
+        Embed the reactant and product encoding
+
+        Args:
+            encoding: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
+
+        Returns:
+            embedding: embedding of the reactant and product encoding
+        """
+        return self.embedder(**encoding).last_hidden_state[:, 0, :]
+    def __len__(self):
+        return self.embeddings.shape[0]
+
+    def __getitem__(self, idx):
+        return self.embeddings[idx, :, :], self.labels[idx]
