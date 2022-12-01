@@ -162,17 +162,19 @@ class RxnDatasetEmbeddingsRegression(RxnDatasetRegression):
         Returns:
             tokenized_smi: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
         """
+        marked_smi_length = 5 # length of the marked SMILES: [r1, r2, ">>", p1, p2]
         rsmis, psmis = smi.split('>>')
-        if "." in rsmis:
+        if '.' in rsmis:
             rsmis = rsmis.split('.')
         else:
-            rsmis = [rsmis, self.tokenizer.pad_token]
-        if "." in psmis:
+            rsmis = [rsmis]
+        if '.' in psmis:
             psmis = psmis.split('.')
         else:
-            psmis = [psmis, self.tokenizer.pad_token]
+            psmis = [psmis]
         marked_smi = rsmis + [">>"] + psmis
-        return self.tokenizer(marked_smi, padding='max_length', truncation=True, return_tensors="pt")
+        marked_smi += ["[PAD]"] * (marked_smi_length - len(marked_smi))
+        return self.tokenizer(marked_smi, padding=True, truncation=True, return_tensors="pt")
 
     def embed(self, encoding):
         """
@@ -189,4 +191,4 @@ class RxnDatasetEmbeddingsRegression(RxnDatasetRegression):
         return self.embeddings.shape[0]
 
     def __getitem__(self, idx):
-        return self.embeddings[idx, :, :], self.labels[idx]
+        return {"inputs_embeddings": self.embeddings[idx, :, :], "labels": self.labels[idx]}
