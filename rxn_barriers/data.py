@@ -150,19 +150,19 @@ class RxnDatasetEmbeddingsRegression(RxnDatasetRegression):
         super().__init__(data_path, tokenizer, targets)
         self.embedder = embedder
         self.encodings = [self.preprocess(smi) for smi in self.df.rxn_smiles]
-        self.embeddings = torch.stack([self.embed(encoding) for encoding in self.encodings])
 
     def preprocess(self, smi):
         """
-        Proprocess and tokenize the reactant and product SMILES
+        Prepocess the reaction SMILES into reactant SMILES and product SMILES and tokenize them
 
         Args:
             smi: string representing the reaction SMILES
 
         Returns:
-            tokenized_smi: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
+            tokenized_rxn_smi: dictionary with keys `input_ids`, `token_type_ids`, `attention_mask`.
+            rxn_smi_attention_mask: attention mask for the padded reaction SMILES
         """
-        marked_smi_length = 5 # length of the marked SMILES: [r1, r2, ">>", p1, p2]
+        max_rxn_smi_length = 7 # maximum length of the segmentized reaction SMILES: [r1, r2, r3, ">>", p1, p2, p3]
         rsmis, psmis = smi.split('>>')
         if '.' in rsmis:
             rsmis = rsmis.split('.')
@@ -172,9 +172,11 @@ class RxnDatasetEmbeddingsRegression(RxnDatasetRegression):
             psmis = psmis.split('.')
         else:
             psmis = [psmis]
-        marked_smi = rsmis + [">>"] + psmis
-        marked_smi += ["[PAD]"] * (marked_smi_length - len(marked_smi))
-        return self.tokenizer(marked_smi, padding=True, truncation=True, return_tensors="pt")
+        rxn_smi = rsmis + [">>"] + psmis
+        num_pad_tokens = max_rxn_smi_length - len(rxn_smi)
+        rxn_smi_attention_mask = [1] * len(rxn_smi) + [0] * num_pad_tokens
+        rxn_smi += [self.tokenizer.pad_token] * num_pad_tokens
+        return self.tokenizer(rxn_smi, padding=True, truncation=True, return_tensors="pt"), rxn_smi_attention_mask
 
     def embed(self, encoding):
         """
@@ -186,9 +188,9 @@ class RxnDatasetEmbeddingsRegression(RxnDatasetRegression):
         Returns:
             embedding: embedding of the reactant and product encoding
         """
-        return self.embedder(**encoding).last_hidden_state[:, 0, :]
-    def __len__(self):
-        return self.embeddings.shape[0]
+        return self.embedder(**encoding).last_hidden_state[:, 0, :].clone().detach()
 
     def __getitem__(self, idx):
-        return {"inputs_embeddings": self.embeddings[idx, :, :], "labels": self.labels[idx]}
+        rxn_smi_embedding = self.embed(self.encodings[idx][0])
+        rxn_smi_attention_mask = torch.tensor(self.encodings[idx][1])
+        return {"inputs_embeds": rxn_smi_embedding, "attention_mask": rxn_smi_attention_mask, "labels": self.labels[idx]}
