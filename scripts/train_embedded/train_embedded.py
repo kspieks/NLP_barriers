@@ -1,6 +1,7 @@
 import json
-
+import os
 import torch
+# torch.backends.cudnn.benchmark = True
 from transformers import (
     AlbertConfig,
     AlbertForSequenceClassification,
@@ -10,8 +11,8 @@ from transformers import (
     RobertaModel,
 )
 
-# import sys
-# sys.path.insert(0, "/home/gridsan/hwpang/Software/NLP_barriers")
+import wandb
+
 from rxn_barriers.data import RxnDatasetEmbeddingsRegression, TorchStandardScaler
 from rxn_barriers.tokenization import SmilesTokenizer
 from rxn_barriers.utils.parsing import parse_command_line_arguments
@@ -27,20 +28,6 @@ MODEL_CLASSES = {
 }
 
 args, huggingface_args = parse_command_line_arguments()
-
-# class ARGS(object):
-#     def __init__(self):
-#         self.embedder_type = 'roberta'
-#         self.embedder_path = '/home/gridsan/hwpang/Software/SMILES_tokenized_PubChem_shard00_160k/'
-#         self.embedder_config_json = '/home/gridsan/hwpang/Software/SMILES_tokenized_PubChem_shard00_160k/config.json'
-#         self.model_type = 'bert'
-#         self.config_json = 'bert_config.json'
-#         self.vocab_file = '/home/gridsan/hwpang/Software/SMILES_tokenized_PubChem_shard00_160k/vocab.txt'
-#         self.train_data = '/home/gridsan/hwpang/Software/NLP_barriers/data/ccsdtf12/canonicalized_smiles/splits/scaffold_split_0_train.csv'
-#         self.val_data = '/home/gridsan/hwpang/Software/NLP_barriers/data/ccsdtf12/canonicalized_smiles/splits/scaffold_split_0_val.csv'
-#         self.test_data = 'test.csv'
-#         self.targets = 'dE0'
-# args = ARGS()
 
 # set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -90,19 +77,27 @@ print(f'Val scaled mean: {val_dataset.mean} +- std {val_dataset.std} kcal/mol')
 test_dataset.labels = scaler.transform(torch.tensor(test_dataset.labels, dtype=torch.float))
 print(f'Test scaled mean: {test_dataset.mean} +- std {test_dataset.std} kcal/mol')
 
-
 model_config_class, model_class = MODEL_CLASSES[args.model_type.lower()]
 
 # instantiate model
 with open(args.config_json, 'r') as f:
     model_config_dict = json.load(f)
 
-model_config_dict['hidden_size'] = embedder.config.hidden_size
-model_config_dict['num_labels'] = 1
 print(f'Using model config:\n{model_config_dict}')
 
 model_config = model_config_class.from_dict(model_config_dict)
 model = model_class(model_config)
+
+print(f'Num model parameters: {model.num_parameters():,}')
+print(f'Model architecture is:\n{model}')
+
+# wandb.init(project=args.wandb_project,
+#            entity=args.wandb_entity,
+        #    mode=args.wandb_mode,
+        #    config=args,
+        #    )
+
+os.environ["WANDB_DISABLED"] = "true"
 
 # set up trainer
 training_args_dict = huggingface_args['TrainingArgs']
@@ -115,7 +110,6 @@ trainer = CustomTrainer(scaler=scaler,
                         args=training_args,
                         train_dataset=train_dataset,
                         eval_dataset=val_dataset,
-                        tokenizer=smi_tokenizer,
                         )
 trainer.train()
 
