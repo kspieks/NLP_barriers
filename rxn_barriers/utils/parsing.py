@@ -43,6 +43,16 @@ def parse_command_line_arguments(command_line_args=None):
     parser.add_argument('--wandb_mode', type=str, default='offline',
                         help='Project name.')
 
+    # Embedder arguments
+    parser.add_argument('--embedder_type', type=str, default='roberta',
+                        help="Embedder architecture.")
+
+    parser.add_argument('--embedder_config_json', type=str,
+                        help='Path to the json file containing embedder configuration.')
+    
+    parser.add_argument('--embedder_path', type=str,
+                        help='Path to the embedder`.')
+
 
     # Config arguments
     # https://huggingface.co/docs/transformers/model_doc/bert#transformers.BertConfig
