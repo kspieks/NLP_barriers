@@ -1,0 +1,1 @@
+These models are used to create the results for Table 4 from the corresponding paper. These models simply fine-tune the mode stored in NLP_barriers/trained_models/MLM_pretrai_on_RMG-DB-8 using the RDB7-CCSD(T)-F12 dataset. The models were co-trained to predict ΔΕ0 and ΔH0 in kcal/mol as described in the manuscript.
