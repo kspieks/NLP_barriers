@@ -1,0 +1,1 @@
+This ALBERT model was pretrained via masked language modeling using the data stored in this repo at NLP_barriers/data/RMG-DB-8, which consists of a downsampled version of the approximately 750 million SMILES published here https://zenodo.org/record/8144353
