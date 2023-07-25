@@ -1,0 +1,1 @@
+These models are used to create the results for Table 5 from the corresponding paper. These models simply fine-tune the mode stored in NLP_barriers/trained_models/MLM_pretrai_on_RMG-DB-8 using the RDB19-M06-2X dataset. The models are co-trained to predict the Gibbs free energy of activation and of reaction in kcal/mol as described in the manuscript.
